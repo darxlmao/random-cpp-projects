@@ -1,0 +1,295 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <iomanip>
+using namespace std;
+
+class Packages
+{
+public:
+	Packages(const char *, const char *, string, string, const char *, int = 0, int = 0, int = 0, float = 0.0, float = 0.0, float = 0.0);
+	~Packages();
+
+	virtual void print() const;
+	//total cost of all common add-ons in every package w/out discount, 
+	//created for the purpose of being able to add on more items later in calcTotal
+	virtual float calcCost() const;
+	//purely price of the item * quantity
+	virtual float calcShippingCost() const;
+
+	virtual float calcTotal() const = 0;
+
+	virtual float discountPercentage() const;
+
+	virtual float discountAmount() const;
+
+private:
+	char *firstName;
+	char *lastName;
+	string address;
+	string date;
+	char *itemName;
+	int quantity, overnight, insurance;
+	float price, overnightPrice, insurancePercentage;
+};
+
+Packages::Packages(const char *first, const char *last, string a, string d, const char *productType, int q, int o, int i, float p, float op, float ip)
+{
+	firstName = new char[strlen(first) + 1];
+	strcpy(firstName, first);
+	lastName = new char[strlen(last) + 1];
+	strcpy(lastName, last);
+	address = a;
+	date = d;
+	itemName = new char[strlen(productType) + 1];
+	strcpy(itemName, productType);
+	quantity = q;
+	overnight = o;
+	insurance = i;
+	price = p;
+	overnightPrice = op;
+	insurancePercentage = ip;
+}
+
+Packages::~Packages()
+{
+	delete[] firstName;
+	delete[] lastName;
+}
+
+void Packages::print() const
+{
+	cout << setprecision(2) << showpoint << fixed;
+	cout << "Customer: " << firstName << ' ' << lastName << endl;
+	cout << "Expected Arrival Date: " << date << endl;
+	cout << endl << quantity << " " << itemName << ": shipping cost is $" << calcShippingCost() << endl;
+
+	if (overnight == 1)
+	{
+		cout << "overnight delivery is $" << overnightPrice << endl;
+	}
+	else
+		cout << "no overnight delivery specified" << endl;
+		
+	if (insurance == 1)
+	{
+		cout << "insurance is " << insurancePercentage*100 << "%" << endl;
+	}
+	else
+		cout << "no insurance specified" << endl;
+
+}
+
+float Packages::calcCost() const
+{
+	if (overnight == 1 && insurance == 1)
+		return (float)quantity*price + overnightPrice + (quantity*price*insurancePercentage);
+	else if (overnight == 1 && insurance == 0)
+		return (float)quantity*price + overnightPrice;
+	else if (overnight == 0 && insurance == 1)
+		return (float)quantity*price + (quantity*price*insurancePercentage);
+	else
+		return (float)quantity*price;
+}
+
+float Packages::calcShippingCost() const
+{
+	return (float)quantity*price;
+}
+
+float Packages::discountPercentage() const
+{
+	if (calcCost() <= 300)
+		return 1.9;
+	else if (calcCost() >= 300.01 && calcCost() <= 600)
+		return 2.6;
+	else if (calcCost() >= 600.01 && calcCost() <= 1000)
+		return 2.9;
+	else if (calcCost() >= 1000.01)
+		return 3.4;
+}
+
+float Packages::discountAmount() const
+{
+	if (discountPercentage() == 1.9)
+		return .019*calcCost();
+	else if (discountPercentage() == 2.6)
+		return .026*calcCost();
+	else if (discountPercentage() == 2.9)
+		return .029*calcCost();
+	else
+		return .034*calcCost();
+}
+
+
+class VideoGames: public Packages
+{
+public: 
+	VideoGames(const char *, const char *, string, string, const char *, int = 0, int = 0, int = 0, float = 0.0, float = 0.0, float = 0.0);
+	//ask if need to calculate for shipping cost and where to get data from
+	//virtual float calcShippingCost() const;
+
+	float calcTotal() const;
+
+	void print() const;
+
+
+private: 
+
+};
+
+VideoGames::VideoGames(const char *first, const char *last, string address, string date, const char *item, int quantity, int overnight, int insurance,
+						float price, float overnightPrice, float insurancePercentage)
+			:Packages(first, last, address, date, item, quantity, overnight, insurance, price, overnightPrice, insurancePercentage)
+{
+
+}
+
+float VideoGames::calcTotal() const
+{
+	return Packages::calcCost() - Packages::discountAmount();
+}
+
+void VideoGames::print() const
+{
+	return Packages::print();
+}
+
+class GeniusPhones : public Packages
+{
+public:
+	GeniusPhones(const char *, const char *, string, string, const char *, int = 0, int = 0, int = 0, float = 0.0, float = 0.0, float = 0.0, float = 0.0);
+	//ask if need to calculate for shipping cost and where to get data from
+	//virtual float calcShippingCost() const;
+
+	float calcTotal() const;
+
+	void print() const;
+
+
+private:
+	float phoneCases;
+
+};
+
+GeniusPhones::GeniusPhones(const char *first, const char *last, string address, string date, const char *item, int quantity, int overnight, int insurance,
+	float price, float overnightPrice, float insurancePercentage, float cases)
+	:Packages(first, last, address, date, item, quantity, overnight, insurance, price, overnightPrice, insurancePercentage)
+{
+	phoneCases = cases;
+}
+
+float GeniusPhones::calcTotal() const
+{
+	return Packages::calcCost() - Packages::discountAmount() + (phoneCases*24.99);
+}
+
+void GeniusPhones::print() const
+{
+	return Packages::print();
+}
+
+class Hamburgers : public Packages
+{
+public:
+	Hamburgers(const char *, const char *, string, string, const char *, int = 0, int = 0, int = 0, 
+		float = 0.0, float = 0.0, float = 0.0, float = 0.0, float = 0.0);
+	//ask if need to calculate for shipping cost and where to get data from
+	//virtual float calcShippingCost() const;
+
+	float calcTotal() const;
+
+	void print() const;
+
+
+private:
+	float condiments, buns;
+
+};
+
+Hamburgers::Hamburgers(const char *first, const char *last, string address, string date, const char *item, int quantity, int overnight, int insurance,
+	float price, float overnightPrice, float insurancePercentage, float toppings, float bread)
+	:Packages(first, last, address, date, item, quantity, overnight, insurance, price, overnightPrice, insurancePercentage)
+{
+	condiments = toppings;
+	buns = bread;
+}
+
+float Hamburgers::calcTotal() const
+{
+	return Packages::calcCost() - Packages::discountAmount() + (condiments*1.79) + (buns*1.89);
+}
+
+void Hamburgers::print() const
+{
+	return Packages::print();
+}
+
+class Cups : public Packages
+{
+public:
+	Cups(const char *, const char *, string, string, const char *, int = 0, int = 0, int = 0, float = 0.0, float = 0.0, float = 0.0);
+	//ask if need to calculate for shipping cost and where to get data from
+	//virtual float calcShippingCost() const;
+
+	float calcTotal() const;
+
+	void print() const;
+
+
+private:
+
+};
+
+Cups::Cups(const char *first, const char *last, string address, string date, const char *item, int quantity, int overnight, int insurance,
+	float price, float overnightPrice, float insurancePercentage)
+	:Packages(first, last, address, date, item, quantity, overnight, insurance, price, overnightPrice, insurancePercentage)
+{
+
+}
+
+float Cups::calcTotal() const
+{
+	return Packages::calcCost() - Packages::discountAmount();
+}
+
+void Cups::print() const
+{
+	return Packages::print();
+}
+
+int main()
+{
+	Packages *ptr;
+	//enter first name, last name, address, date, quantity, overnight, insurance, price, overnight price, insurance price
+	ptr = new VideoGames("Joe", "Smith", "1111 address ln", "10-10-2020", "Video Games", 5, 1, 1, 19.99, 4.99, .06);
+	ptr->print();
+	cout << "Total cost is $" << ptr->calcCost() << endl;
+	cout << "Discount Percentage is " << ptr->discountPercentage() << "% for a discount of $" << ptr->discountAmount() << endl;
+	cout << "Total Cost after discount is $" << ptr->calcTotal() << endl << endl;
+	delete ptr;
+
+	ptr = new GeniusPhones("Jordan", "ye", "1211 address ln", "10-12-2020", "Genius Phones", 5, 1, 1, 799.99, 25.0, .11, 2);
+	ptr->print();
+	cout << "Total cost is $" << ptr->calcCost() << endl;
+	cout << "Discount Percentage is " << ptr->discountPercentage() << "% for a discount of $" << ptr->discountAmount() << endl;
+	cout << "Total Cost after discount is $" << ptr->calcTotal() << endl << endl;
+	delete ptr;
+
+	ptr = new Hamburgers("Ryan", "Andrew", "12 asdfress ln", "10-11-2020", "Hamburgers", 5, 1, 1, 7.99, 9.00, .03, 1, 1);
+	ptr->print();
+	cout << "Total cost is $" << ptr->calcCost() << endl;
+	cout << "Discount Percentage is " << ptr->discountPercentage() << "% for a discount of $" << ptr->discountAmount() << endl;
+	cout << "Total Cost after discount is $" << ptr->calcTotal() << endl << endl;
+	delete ptr;
+
+	ptr = new Cups("Seth", "Hochwald", "Big gulp cups street", "12-18-2018", "Big Cups", 1000, 1, 1, 5.0, .99, .1000);
+	ptr->print();
+	cout << "Total cost is $" << ptr->calcCost() << endl;
+	cout << "Discount Percentage is " << ptr->discountPercentage() << "% for a discount of $" << ptr->discountAmount() << endl;
+	cout << "Total Cost after discount is $" << ptr->calcTotal() << endl << endl;
+	delete ptr;
+
+	system("PAUSE");
+	return 0;
+}
